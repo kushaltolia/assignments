@@ -12,6 +12,20 @@ const app = express();
 // clears every one second
 
 let numberOfRequestsForUser = {};
+function rateLimiterMiddleWare(req, res, next) {
+  let requestCount = numberOfRequestsForUser.userId;
+  if(!requestCount) {
+    numberOfRequestsForUser.userId = 1;
+    next();
+  }
+  else if(requestCount && requestCount<5) {
+    numberOfRequestsForUser.userId++;
+    next();
+  } else {
+    res.status(404).send("Excceding number of requests allowed");
+  }
+}
+app.use(rateLimiterMiddleWare);
 setInterval(() => {
     numberOfRequestsForUser = {};
 }, 1000)
@@ -23,5 +37,4 @@ app.get('/user', function(req, res) {
 app.post('/user', function(req, res) {
   res.status(200).json({ msg: 'created dummy user' });
 });
-
 module.exports = app;
